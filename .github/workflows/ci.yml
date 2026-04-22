@@ -34,4 +34,4 @@ jobs:
       - name: Run lint
         run: |
           python -m black app/api.py app/test/test_api.py
-          python -m pylint app/test app/api.py -fail-under=9.0
+          python -m pylint app/test app/api.py --max-line-length=100 --fail-under=9.0  # Pontuação mínima de 9.0
