@@ -3,34 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - "*feat*"
-      - "*fix*"
-      - "*refactor*"
-      - "*test*"
-      - "*docs*"
-      - "*chore*"
-      - "*style*"
-      - "*perf*"
-      - "*ci*"
-      - "*build*"
-      - "*release*"
-      - "*hotfix*"
-      - "*security*"
+      - "**"
   pull_request:
     branches:
-      - "*feat*"
-      - "*fix*"
-      - "*refactor*"
-      - "*test*"
-      - "*docs*"
-      - "*chore*"
-      - "*style*"
-      - "*perf*"
-      - "*ci*"
-      - "*build*"
-      - "*release*"
-      - "*hotfix*"
-      - "*security*"
+      - "**"
 
 jobs:
   test:
