@@ -37,6 +37,7 @@ jobs:
           python -m pylint app/test app/api.py --max-line-length=100 --fail-under=9.0  # Pontuação mínima de 9.0
 
   Docker:
+    needs: PythonTests
     runs-on: ubuntu-latest
     steps:
       - name: Docker Hub login
