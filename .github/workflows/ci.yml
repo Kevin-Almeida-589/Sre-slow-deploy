@@ -44,8 +44,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t kevinalmeida/sre-challenge-slow-deploy/sre-challenge:latest .
-
+          docker build -f app/Dockerfile -t kevinalmeida/sre-challenge-slow-deploy/sre-challenge:latest .
       - name: Push Docker image to Docker Hub
         run: |
           docker push kevinalmeida/sre-challenge-slow-deploy/sre-challenge:latest
