@@ -1,0 +1,35 @@
+# Ambiente virtual
+venv/
+env/
+.sreenv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Cache Python
+.Python
+.pytest_cache/
+.mypy_cache/
+
+# Logs
+*.log
+
+# Variáveis de ambiente
+.*env
+.env.*
+
+# IDEs
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Uvicorn / FastAPI
+*.sqlite3
+*.db
+
+# Docker (se usar depois)
+docker-compose.override.yml
