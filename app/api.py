@@ -66,7 +66,7 @@ def memory_leak(_authenticated: Annotated[bool, Depends(verify_token)]):
     leak.append("x" * 60_000_000)  # 10MB a cada request
     return {"size": len(leak)}
 
- 
+
 @app.get("/random-error")
 def random_error(_authenticated: Annotated[bool, Depends(verify_token)]):
     """
