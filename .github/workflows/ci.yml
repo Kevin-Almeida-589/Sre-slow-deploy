@@ -9,7 +9,7 @@ on:
       - "**"
 
 jobs:
-  Python Tests:
+  PythonTests:
     runs-on: ubuntu-latest
     env:
       TOKEN_FIXO: ${{ secrets.TOKEN_FIXO }}
