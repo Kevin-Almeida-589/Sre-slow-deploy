@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
+import json
+import os
+
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 import pika
-import os
-import json
 
-host = os.getenv("RABBITMQHOST","localhost")
+host = os.getenv("RABBITMQHOST", "localhost")
 
 
-def send_to_queue(robot_data: dict):
+def send_to_queue(robot_data: dict) -> None:
+    """Publish a payload to the RabbitMQ queue."""
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(host)
     )
@@ -22,17 +24,18 @@ def send_to_queue(robot_data: dict):
     connection.close()
 
 app = FastAPI()
-
-_click_count = 0
+app.state.click_count = 0
 
 
 @app.get("/health")
-def health():
+def health() -> dict:
+    """Liveness endpoint."""
     return {"message": "Healthy"}
 
 
 @app.get("/", response_class=HTMLResponse)
-def home():
+def home() -> str:
+    """Render the single-page HTML UI."""
     # Single-file HTML (no templates/static folder) to keep it simple.
     return """
     <!doctype html>
@@ -276,14 +279,14 @@ def home():
 
 
 @app.post("/api/click")
-def click(payload: dict):
-    global _click_count
-    _click_count += 1
+def click(payload: dict) -> dict:
+    """Receive a click payload, publish it, and return basic metadata."""
+    app.state.click_count += 1
     send_to_queue(payload)
     return {
         "ok": True,
         "message": "POST recebido com sucesso",
-        "click_count": _click_count,
+        "click_count": app.state.click_count,
         "robot": payload.get("robot"),
         "payload": payload,
     }

@@ -9,35 +9,38 @@ import app.api as api_module
 
 
 @pytest.fixture()
-def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def api_client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     """TestClient with RabbitMQ side-effects disabled."""
 
     def _noop_send_to_queue(_: dict) -> None:
         return None
 
     monkeypatch.setattr(api_module, "send_to_queue", _noop_send_to_queue)
-    api_module._click_count = 0  # pylint: disable=protected-access
+    api_module.app.state.click_count = 0
     return TestClient(api_module.app)
 
 
-def test_health(client: TestClient) -> None:
-    response = client.get("/health")
+def test_health(api_client: TestClient) -> None:
+    """Health endpoint returns a stable payload."""
+    response = api_client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"message": "Healthy"}
 
 
-def test_home_html(client: TestClient) -> None:
-    response = client.get("/")
+def test_home_html(api_client: TestClient) -> None:
+    """Home page returns HTML content."""
+    response = api_client.get("/")
 
     assert response.status_code == 200
     assert "text/html" in response.headers.get("content-type", "")
     assert "Mini Web App" in response.text
 
 
-def test_click_returns_payload_and_increments_count(client: TestClient) -> None:
+def test_click_returns_payload_and_increments_count(api_client: TestClient) -> None:
+    """Click endpoint echoes payload and increments click count."""
     payload = {"source": "test", "robot": "simple-google"}
-    response = client.post("/api/click", json=payload)
+    response = api_client.post("/api/click", json=payload)
 
     assert response.status_code == 200
     body = response.json()
@@ -46,6 +49,6 @@ def test_click_returns_payload_and_increments_count(client: TestClient) -> None:
     assert body["payload"] == payload
     assert body["click_count"] == 1
 
-    response2 = client.post("/api/click", json=payload)
+    response2 = api_client.post("/api/click", json=payload)
     assert response2.status_code == 200
     assert response2.json()["click_count"] == 2
