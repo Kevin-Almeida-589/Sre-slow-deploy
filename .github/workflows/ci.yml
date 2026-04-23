@@ -57,7 +57,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'image'
-          image-ref: 'nginx:latest'
+          image-ref: 'nginx:alpine'
           format: 'table'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'
