@@ -1,64 +1,40 @@
 """Test API endpoints"""
 
-import random
-import os
 from fastapi.testclient import TestClient
-from app.api import app, leak
+from app.api import app
 
 client = TestClient(app)
-TOKEN_FIXO = os.getenv("TOKEN_FIXO")
 
 
 def test_health():
     """
     Test health endpoint
     """
-    response = client.get("/health", headers={"x-token": TOKEN_FIXO})
+    response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"message": "Healthy"}
 
 
-def test_slow():
+def test_home_html():
     """
-    Test slow endpoint
+    Test home page returns HTML.
     """
-    ms = 1000
-    response = client.get(f"/slow?ms={ms}", headers={"x-token": TOKEN_FIXO})
+    response = client.get("/")
 
     assert response.status_code == 200
-    assert response.json() == {"message": f"Slow {ms}ms completed"}
+    assert "text/html" in response.headers.get("content-type", "")
+    assert "Mini Web App" in response.text
 
 
-def test_compute():
+def test_click():
     """
-    Test compute endpoint
+    Test click endpoint
     """
-    response = client.get("/compute", headers={"x-token": TOKEN_FIXO})
+    response = client.post("/api/click", json={"source": "test", "robot": "Simple-google"})
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Computation completed"}
-
-
-def test_memory_leak():
-    """
-    Test memory leak endpoint
-    """
-
-    leak.clear()
-    response = client.get("/leak", headers={"x-token": TOKEN_FIXO})
-
-    assert response.status_code == 200
-    assert response.json() == {"size": 1}
-
-
-def test_random_error(monkeypatch):
-    """
-    Test random error endpoint
-    """
-
-    monkeypatch.setattr(random, "random", lambda: 1.0)
-    response = client.get("/random-error", headers={"x-token": TOKEN_FIXO})
-
-    assert response.status_code == 200
-    assert response.json() == {"message": "No error"}
+    body = response.json()
+    assert body["ok"] is True
+    assert body["robot"] == "Simple-google"
+    assert body["payload"] == {"source": "test", "robot": "Simple-google"}
