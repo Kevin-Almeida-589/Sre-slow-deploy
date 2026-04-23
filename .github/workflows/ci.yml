@@ -79,7 +79,7 @@ jobs:
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
           minikube start --driver=docker
 
-      -- name: Use Minikube Docker env
+      - name: Use Minikube Docker env
         run: |
           eval $(minikube docker-env)
 
