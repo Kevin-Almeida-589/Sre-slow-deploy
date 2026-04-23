@@ -3,39 +3,16 @@ name: CI
 on:
   push:
     branches:
-      - "*feat*"
-      - "*fix*"
-      - "*refactor*"
-      - "*test*"
-      - "*docs*"
-      - "*chore*"
-      - "*style*"
-      - "*perf*"
-      - "*ci*"
-      - "*build*"
-      - "*release*"
-      - "*hotfix*"
-      - "*security*"
+      - "**"
   pull_request:
     branches:
-      - "*feat*"
-      - "*fix*"
-      - "*refactor*"
-      - "*test*"
-      - "*docs*"
-      - "*chore*"
-      - "*style*"
-      - "*perf*"
-      - "*ci*"
-      - "*build*"
-      - "*release*"
-      - "*hotfix*"
-      - "*security*"
+      - "**"
 
 jobs:
-  test:
+  PythonTests:
     runs-on: ubuntu-latest
-
+    env:
+      TOKEN_FIXO: ${{ secrets.TOKEN_FIXO }}
     steps:
       - name: Code checkout
         uses: actions/checkout@v4
@@ -57,4 +34,60 @@ jobs:
       - name: Run lint
         run: |
           python -m black app/api.py app/test/test_api.py
-          python -m pylint app/test app/api.py
+          python -m pylint app/test app/api.py --max-line-length=100 --fail-under=9.0  # Pontuação mínima de 9.0
+
+  Docker:
+    needs: PythonTests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
+      - name: Docker Hub login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          docker build -f app/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/sre-deploy:latest .
+      
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: 'nginx:alpine'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/sre-deploy:latest
+
+      - name: Clean up
+        run: |
+          docker rmi ${{ secrets.DOCKER_USERNAME }}/sre-deploy:latest
+
+  MiniKube:
+    needs: Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Start Minikube
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+          minikube start --driver=docker
+
+      - name: Use Minikube Docker env
+        run: |
+          eval $(minikube docker-env)
+
+      - name: Deploy to Kubernetes (Minikube)
+        run: |
+          kubectl apply -f https://github.com/kedacore/keda/releases/download/v2.10.1/keda-2.10.1.yaml
+          kubectl apply -f k8s/
+          kubectl set image deployment/frontend frontend=${{ secrets.DOCKER_USERNAME }}/sre-deploy:latest

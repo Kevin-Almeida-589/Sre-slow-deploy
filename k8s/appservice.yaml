@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: kevinalmeida/sre-deploy
+          ports:
+            - containerPort: 8000
+          env:
+          - name: RABBITMQHOST
+            value: rabbitmq
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  type: NodePort   # 👈 AQUI
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: frontend-service
+  selector:
+    app: frontend
