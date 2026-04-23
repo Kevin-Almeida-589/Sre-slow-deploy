@@ -3,11 +3,11 @@ name: CI
 on:
   push:
     branches:
-      - "**"
+      - "main"  # Roda quando o código entra na main (via merge ou push direto)
   pull_request:
+    types: [opened, synchronize, reopened, closed] # Adicionado 'closed' para capturar o merge
     branches:
-      - "**"
-
+      - "main"
 jobs:
   PythonTests:
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
   Docker:
     needs: PythonTests
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     steps:
       - name: Code checkout
         uses: actions/checkout@v4
